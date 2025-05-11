@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>编辑书签</title>
+    <style>
+        body {
+            background: #f5f6fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0 20px;
+            color: #2c3e50;
+        }
+
+        .form-container {
+            padding: 0 10px;
+            border-radius: 12px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: #1976d2;
+            outline: none;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .cancel-btn {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .save-btn {
+            background: #1976d2;
+            color: #fff;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>编辑书签</h2>
+        <div class="form-group">
+            <label for="icon">图标URL</label>
+            <input type="text" id="icon" placeholder="输入图标URL">
+        </div>
+        <div class="form-group">
+            <label for="title">标题</label>
+            <input type="text" id="title" placeholder="输入标题">
+        </div>
+        <div class="form-group">
+            <label for="url">网址</label>
+            <input type="text" id="url" placeholder="输入网址">
+        </div>
+        <div class="button-group">
+            <button class="cancel-btn" id="cancelBtn">取消</button>
+            <button class="save-btn" id="saveBtn">保存</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 获取预填充数据
+            const data = await window.electronAPI.getBookmarkData();
+            if (data) {
+                document.getElementById('icon').value = data.icon || '';
+                document.getElementById('title').value = data.title || '';
+                document.getElementById('url').value = data.url || '';
+            }
+
+            const saveBtn = document.getElementById('saveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const inputs = document.querySelectorAll('input');
+            
+            saveBtn.onclick = () => {
+                // 验证所有字段都已填写
+                const values = Array.from(inputs).map(input => input.value.trim());
+                if (values.some(value => !value)) {
+                    alert('请填写所有字段');
+                    return;
+                }
+
+                const bookmark = {
+                    icon: document.getElementById('icon').value,
+                    title: document.getElementById('title').value,
+                    url: document.getElementById('url').value
+                };
+
+                if (data.index !== undefined) {
+                    // 编辑现有书签
+                    window.electronAPI.editBookmark(data.index, bookmark)
+                        .then(() => window.electronAPI.closeWindow());
+                } else {
+                    // 添加新书签
+                    window.electronAPI.saveBookmark(bookmark)
+                        .then(() => window.electronAPI.closeWindow());
+                }
+            };
+            
+            cancelBtn.onclick = () => {
+                window.electronAPI.closeWindow();
+            };
+        });
+    </script>
+</body>
+</html>

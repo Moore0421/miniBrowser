@@ -1,0 +1,484 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-main {
+    display: flex;
+    height: calc(100vh - 40px);
+}
+
+.sidebar {
+    width: 240px;
+    background: #ffffff;
+    height: 100%;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    margin-top: 40px;
+    flex-shrink: 0;
+    overflow: hidden;
+    transform: translateX(-5px);
+}
+
+.sidebar.collapsed {
+    width: 70px;
+    transform: translateX(-5px);
+}
+
+.menu-items {
+    padding: 20px 10px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 8px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    background: #f8f9fa;
+    position: relative;
+    width: 95%;
+    height: 35px;
+}
+
+.menu-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.menu-item i {
+    font-size: 18px;
+    color: #2c3e50;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.sidebar.collapsed .menu-item {
+    justify-content: center;
+    padding: 12px 8px;
+    width: 80%;
+    height: 35px;
+}
+
+.sidebar.collapsed .menu-item i {
+    margin-right: 0;
+    transform: translateX(0);
+}
+
+.menu-item .item-text {
+    color: #2c3e50;
+    font-weight: 500;
+    white-space: nowrap;
+    padding-left: 12px;
+    transition: opacity 0.3s, max-width 0.3s, padding 0.3s;
+    flex: 1;
+    opacity: 1;
+    max-width: 200px;
+    overflow: hidden;
+}
+
+.sidebar.collapsed .item-text {
+    opacity: 0;
+    max-width: 0;
+    padding-left: 0;
+}
+
+.add-btn {
+    margin-top: 20px;
+    background: #e3f2fd;
+}
+
+.add-btn:hover {
+    background: #bbdefb;
+}
+
+.content {
+    flex: 1;
+    margin-top: 40px;
+    overflow: auto;
+    height: calc(100vh - 40px);
+    display: none; /* 隐藏原内容区域 */
+}
+
+.toggle-item {
+    border-bottom: 1px solid #eee;
+}
+
+.sidebar.collapsed .toggle-item i {
+    transform: rotate(180deg);
+}
+
+.toggle-item i {
+    transition: transform 0.3s ease;
+}
+
+/* 顶栏样式 */
+.titlebar {
+    height: 40px;
+    width: 100vw;
+    background: #f5f6fa;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    -webkit-app-region: drag;
+    user-select: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1001;  /* 提高顶栏的 z-index */
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.tabs {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin-left: 20px;
+    width: calc(100vw - 200px); /* 调整宽度，留出空间给窗口控制按钮 */
+    overflow-x: auto; /* 允许水平滚动 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.tabs::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+}
+
+.tab {
+    height: 36px;
+    width: 100px;
+    padding: 0 18px;
+    background: #f8f9fa;
+    border-radius: 12px 12px 0 0;
+    margin-right: 6px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 15px;
+    color: #2c3e50;
+    transition: background 0.2s, color 0.2s;
+    -webkit-app-region: no-drag;
+    border: 1px solid transparent;
+    border-bottom: 1px solid #e0e0e0;
+    position: relative;
+    top: 2px;
+    padding-right: 30px; 
+    position: relative; 
+    gap: 6px;
+    max-width: 200px;
+}
+
+.tab.active {
+    background: #fff;
+    color: #1976d2;
+    font-weight: bold;
+    border-bottom: none;
+    z-index: 2;
+}
+
+.tab.add-tab {
+    width: 30px;
+    justify-content: center;
+    background: transparent;
+    color: #888;
+    border: none;
+}
+
+.tab.add-tab:hover {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.window-controls {
+    display: flex;
+    align-items: center;
+    -webkit-app-region: no-drag;
+}
+
+.window-btn {
+    width: 46px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #666;
+    transition: background-color 0.2s;
+}
+
+.window-btn:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+.max-btn i.restore {
+    font-size: 14px;
+}
+
+.close-btn:hover {
+    background: #e81123;
+    color: #fff;
+}
+
+.browser-view {
+    flex: 1;
+    position: relative;
+    margin-top: 40px;
+    height: calc(100vh - 40px);
+    background: #fff;
+}
+
+webview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+}
+
+webview.active {
+    display: block;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.close-tab {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    display: none; /* 初始隐藏 */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+}
+
+.tab:hover .close-tab {
+    display: flex;
+}
+
+.close-tab:hover {
+    color: #e81123;
+}
+
+.tab-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.tab-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bookmark-btn {
+    width: 30px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+    -webkit-app-region: no-drag;
+}
+
+.bookmark-btn:hover {
+    color: #1976d2;
+}
+
+.bookmark-btn i {
+    font-size: 16px;  /* 调整图标大小从18px到16px */
+}
+
+.bookmark-btn.active i {
+    color: #1976d2;
+}
+
+.context-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    padding: 5px 0;
+    z-index: 1000;
+}
+
+.menu-option {
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.menu-option:hover {
+    background-color: #f0f0f0;
+}
+
+.menu-option.delete:hover {
+    background-color: #ffebee;
+    color: #e53935;
+}
+
+.nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 15px;
+    -webkit-app-region: no-drag;
+}
+
+.nav-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: rgba(0,0,0,0.1);
+    color: #1976d2;
+}
+
+.nav-btn:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* 修改书签图标大小 */
+.bookmark-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+.menu-item.bookmark-item img {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    object-fit: contain;
+    margin-left: 5px;
+}
+
+/* 修改书签文字宽度 */
+.menu-item.bookmark-item .item-text {
+    max-width: 140px;
+    text-overflow: ellipsis;
+    margin-left: 3px;
+}
+
+/* 搜索栏样式 */
+.search-overlay {
+    position: fixed;
+    top: 40px;  /* 从顶栏底部开始 */
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    transform: translateY(-100%);  /* 初始隐藏在顶部 */
+    transition: transform 0.3s ease;
+    z-index: 1000;  /* 确保搜索栏在顶栏下方 */
+}
+
+.search-overlay.active {
+    transform: translateY(0);  /* 显示时滑下 */
+}
+
+.search-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #f5f6fa;
+    border-radius: 8px;
+    padding: 8px 15px;
+    margin-right: 15px;
+}
+
+.search-box input {
+    flex: 1;
+    border: none;
+    background: none;
+    outline: none;
+    font-size: 15px;
+    color: #333;
+    margin-left: 10px;
+}
+
+.search-box button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.search-box button:hover {
+    color: #1976d2;
+}
+
+/* 搜索按钮样式 */
+.search-btn {
+    width: 46px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+    -webkit-app-region: no-drag;
+}
+
+.search-btn:hover {
+    color: #1976d2;
+}

@@ -1,0 +1,59 @@
+{
+  "name": "mini-browser",
+  "version": "0.0.1",
+  "description": "A simple Electron-based mini browser",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.moore.mini-browser",
+    "productName": "Mini Browser",
+    "copyright": "Copyright © 2024 Moore",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "styles.css",
+      "newtab.html",
+      "bookmark-edit.html",
+      "history.html",
+      "historyRenderer.js",
+      "downloads.html",
+      "downloadsRenderer.js",
+      "LOGO.png"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true
+    }
+  }
+}

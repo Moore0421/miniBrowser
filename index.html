@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎使用 Electron</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="titlebar" id="titlebar">
+        <img src="https://www.electronjs.org/assets/img/favicon.ico" alt="Electron" width="25" height="25" style="margin-left: 23px;">
+        <div class="nav-controls">
+            <button class="nav-btn" id="backBtn" disabled><i class="fas fa-arrow-left"></i></button>
+            <button class="nav-btn" id="forwardBtn" disabled><i class="fas fa-arrow-right"></i></button>
+            <button class="nav-btn" id="reloadBtn"><i class="fas fa-redo"></i></button>
+            <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i></button>
+            <button class="bookmark-btn" id="bookmarkBtn"><i class="far fa-star"></i></button>
+        </div>
+        <div class="tabs" id="tabs">
+            <div class="tab add-tab"><i class="fas fa-plus" style="transform: translateX(5px);"></i></div>
+        </div>
+        <div class="window-controls">
+            <button class="window-btn min-btn" id="min-btn"><i class="fas fa-minus"></i></button>
+            <button class="window-btn max-btn" id="max-btn"><i class="far fa-square"></i></button>
+            <button class="window-btn close-btn" id="close-btn"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <div class="app-main">
+        <div class="sidebar" id="sidebar">
+            <div class="menu-items">
+                <div class="menu-item toggle-item" id="toggleBtn">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="item-text">收起菜单</span>
+                </div>
+                <!-- 移除默认的菜单项，改为动态加载书签 -->
+                <div id="bookmarkList"></div>
+                <div class="menu-item add-btn">
+                    <i class="far fa-plus"></i>
+                    <span class="item-text">添加书签</span>
+                </div>
+            </div>
+        </div>
+        <div class="browser-view" id="browser-view"></div>
+    </div>
+
+    <!-- 添加搜索栏 -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="输入网址或搜索内容">
+            <button id="searchGoBtn"><i class="fas fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
