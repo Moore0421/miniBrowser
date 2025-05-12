@@ -47,13 +47,15 @@ npm run build
 
 ## 目录结构
 
-- `main.js`         主进程入口，窗口与 IPC 管理
-- `preload.js`      预加载脚本，暴露安全 API
-- `renderer.js`     渲染进程逻辑，UI 交互
-- `index.html`      主界面
+- `main.js`             主进程入口，窗口与 IPC 管理
+- `preload.js`          预加载脚本，暴露安全 API
+- `renderer.js`         渲染进程逻辑，UI 交互
+- `index.html`          主界面
 - `bookmark-edit.html`  书签编辑弹窗
-- `styles.css`      全局样式
-- `newtab.html`     新标签页内容
+- `styles.css`          全局样式
+- `newtab.html`         新标签页内容
+- `downloads-tab.html`  下载记录页面
+- `history-tab.html`    历史记录页面
 - 其它辅助文件
 
 ## 开发提示
