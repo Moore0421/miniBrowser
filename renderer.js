@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         webview.setAttribute('src', url);
         webview.setAttribute('id', `webview-${tabId}`);
         webview.setAttribute('nodeintegration', 'true');
-        webview.setAttribute('webpreferences', 'contextIsolation=false');
+        webview.setAttribute('preload', './preload.js');
         webview.setAttribute('allowpopups', '');
         webview.className = 'active';
 
@@ -129,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         webview.addEventListener('did-navigate', (e) => {
             tab.setAttribute('data-url', e.url);
-            updateBookmarkButton();  // 更新书签按钮状态
         });
 
         // 添加导航事件监听
@@ -147,6 +146,26 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tab.classList.contains('active')) {
                 reloadBtn.querySelector('i').className = 'fas fa-redo';
                 updateNavButtons(webview);
+                
+                // 记录历史 - 修复重复添加的bug
+                const url = webview.getURL();
+                if (url !== 'newtab.html' && url !== 'history-tab.html' && !url.startsWith('file://')) {
+                    // 检查最近的历史记录，避免重复添加
+                    window.electronAPI.getHistory().then(history => {
+                        const lastRecord = history.length > 0 ? history[history.length - 1] : null;
+                        // 如果最后一条记录不是同一个URL或者时间间隔超过5分钟，才添加新记录
+                        if (!lastRecord || 
+                            lastRecord.url !== url || 
+                            (Date.now() - lastRecord.timestamp > 300000)) {
+                            window.electronAPI.addHistory({
+                                url: url,
+                                title: tab.querySelector('.tab-title').textContent,
+                                favicon: tab.querySelector('.tab-icon').src || '',
+                                timestamp: Date.now()
+                            });
+                        }
+                    });
+                }
             }
         });
 
@@ -263,7 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 修改监听书签变化的代码
     window.electronAPI.onBookmarksUpdated(() => {
         loadBookmarks();
-        updateBookmarkButton();  // 更新书签按钮状态
     });
 
     // 初始加载书签
@@ -280,79 +298,6 @@ document.addEventListener('DOMContentLoaded', () => {
             title: activeTab ? activeTab.querySelector('.tab-title').textContent : '',
             icon: activeTab ? activeTab.querySelector('.tab-icon').src : ''
         });
-    };
-
-    // 添加书签按钮功能
-    const bookmarkBtn = document.getElementById('bookmarkBtn');
-    bookmarkBtn.onclick = async () => {
-        const activeWebview = document.querySelector('webview.active');
-        if (!activeWebview || activeWebview.getAttribute('src') === 'newtab.html') {
-            return; // 如果是新标签页则不处理
-        }
-
-        const activeTab = document.querySelector('.tab.active');
-        if (activeTab) {
-            await window.electronAPI.createBookmarkWindow({
-                url: activeWebview.getAttribute('src'),
-                title: activeTab.querySelector('.tab-title').textContent,
-                icon: activeTab.querySelector('.tab-icon').src
-            });
-        }
-    };
-
-    // 更新书签按钮状态
-    async function updateBookmarkButton() {
-        const activeWebview = document.querySelector('webview.active');
-        const bookmarkBtn = document.getElementById('bookmarkBtn');
-        const currentUrl = activeWebview ? activeWebview.getAttribute('src') : '';
-
-        if (currentUrl === 'newtab.html') {
-            bookmarkBtn.style.display = 'none';
-            return;
-        }
-
-        bookmarkBtn.style.display = 'flex';
-        const bookmarks = await window.electronAPI.getBookmarks();
-        const existingBookmark = bookmarks.find(b => b.url === currentUrl);
-        
-        if (existingBookmark) {
-            bookmarkBtn.querySelector('i').className = 'fas fa-star';
-            bookmarkBtn.classList.add('active');
-            bookmarkBtn.setAttribute('data-bookmark-index', bookmarks.indexOf(existingBookmark));
-        } else {
-            bookmarkBtn.querySelector('i').className = 'far fa-star';
-            bookmarkBtn.classList.remove('active');
-            bookmarkBtn.removeAttribute('data-bookmark-index');
-        }
-    }
-
-    // 修改书签按钮点击处理
-    document.getElementById('bookmarkBtn').onclick = async () => {
-        const activeWebview = document.querySelector('webview.active');
-        const activeTab = document.querySelector('.tab.active');
-        const bookmarkBtn = document.getElementById('bookmarkBtn');
-        const existingIndex = bookmarkBtn.getAttribute('data-bookmark-index');
-
-        if (!activeWebview || activeWebview.getAttribute('src') === 'newtab.html') {
-            return;
-        }
-
-        const bookmarkData = {
-            url: activeWebview.getAttribute('src'),
-            title: activeTab.querySelector('.tab-title').textContent,
-            icon: activeTab.querySelector('.tab-icon').src
-        };
-
-        if (existingIndex !== null) {
-            // 编辑现有书签
-            await window.electronAPI.createBookmarkWindow({
-                ...bookmarkData,
-                index: parseInt(existingIndex)
-            });
-        } else {
-            // 创建新书签
-            await window.electronAPI.createBookmarkWindow(bookmarkData);
-        }
     };
 
     // 添加导航按钮事件监听
@@ -442,4 +387,51 @@ document.addEventListener('DOMContentLoaded', () => {
             searchOverlay.classList.remove('active');
         }
     });
+
+    // 添加历史记录按钮事件监听
+    const historyBtn = document.getElementById('historyBtn');
+    historyBtn.onclick = () => {
+        window.electronAPI.openHistoryWindow();
+    };
+
+    // 添加从历史记录打开URL的监听
+    window.electronAPI.onOpenUrlInNewTab((url) => {
+        createNewTab(url);
+    });
+
+    // 监听在新标签页打开历史记录
+    window.electronAPI.onOpenHistoryInTab(() => {
+        createNewTab('history-tab.html');
+    });
+
+    // 监听打开下载标签页
+    const downloadsBtn = document.getElementById('downloadsBtn');
+    if (downloadsBtn) {
+        downloadsBtn.onclick = () => {
+            window.electronAPI.openDownloadsTab();
+            // 如果按钮在闪烁，点击后应该停止闪烁
+            if (downloadsBtn.classList.contains('blinking')) {
+                downloadsBtn.classList.remove('blinking');
+            }
+        };
+    }
+
+    if (window.electronAPI && typeof window.electronAPI.onOpenDownloadsTab === 'function') {
+        window.electronAPI.onOpenDownloadsTab(() => {
+            createNewTab('downloads-tab.html');
+        });
+    } else {
+        console.error('[Renderer] window.electronAPI.onOpenDownloadsTab is not available or not a function.');
+    }
+
+    // 监听下载开始信号，使下载按钮闪烁
+    if (window.electronAPI && typeof window.electronAPI.onDownloadStarted === 'function') {
+        window.electronAPI.onDownloadStarted((downloadId) => {
+            if (downloadsBtn) {
+                downloadsBtn.classList.add('blinking');
+            }
+        });
+    } else {
+        console.error('[Renderer] window.electronAPI.onDownloadStarted is not available or not a function.');
+    }
 });

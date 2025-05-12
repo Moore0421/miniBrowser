@@ -1,6 +1,6 @@
 {
   "name": "mini-browser",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A simple Electron-based mini browser",
   "main": "main.js",
   "scripts": {
@@ -20,17 +20,9 @@
       "output": "dist"
     },
     "files": [
-      "main.js",
-      "preload.js",
-      "renderer.js",
-      "index.html",
-      "styles.css",
-      "newtab.html",
-      "bookmark-edit.html",
-      "history.html",
-      "historyRenderer.js",
-      "downloads.html",
-      "downloadsRenderer.js",
+      "*.js",
+      "*.html",
+      "*.css",
       "LOGO.png"
     ],
     "win": {
@@ -55,5 +47,9 @@
       "allowToChangeInstallationDirectory": true,
       "deleteAppDataOnUninstall": true
     }
+  },
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "uuid": "^11.1.0"
   }
 }

@@ -463,22 +463,72 @@ iframe {
     color: #1976d2;
 }
 
-/* 搜索按钮样式 */
-.search-btn {
-    width: 46px;
-    height: 40px;
-    border: none;
-    background: transparent;
-    outline: none;
+.history-item {
     display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+
+.history-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+}
+
+.history-details {
+    flex: 1;
+}
+
+.history-title {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.history-url {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.history-time {
+    font-size: 12px;
+    color: #999;
+    margin-left: 12px;
+}
+
+.delete-btn {
+    display: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #f5f5f5;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: #666;
-    transition: all 0.2s;
-    -webkit-app-region: no-drag;
 }
 
-.search-btn:hover {
-    color: #1976d2;
+.history-item:hover .delete-btn {
+    display: flex;
+}
+
+.delete-btn:hover {
+    background: #ffebee;
+    color: #e53935;
+}
+
+/* 下载按钮闪烁动画 */
+@keyframes blinkAnimation {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; } /* 让图标更暗一些以示闪烁 */
+    100% { opacity: 1; }
+}
+
+#downloadsBtn.blinking i { /* 让图标闪烁，而不是整个按钮背景 */
+    animation: blinkAnimation 1.2s infinite;
 }

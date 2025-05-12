@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>下载记录</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: #f5f6fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #2c3e50;
+            user-select: none;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        h2 {
+            margin: 0;
+            color: #1976d2;
+        }
+        .settings-btn, .clear-downloads-btn {
+            padding: 8px 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .settings-btn:hover, .clear-downloads-btn:hover {
+            background: #5a6268;
+        }
+        .downloads-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .download-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: background-color 0.2s;
+        }
+        .download-item.file-missing {
+            background-color: #f8f9fa;
+            opacity: 0.7;
+        }
+        .download-item.file-missing .download-filename,
+        .download-item.file-missing .download-path {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+        .download-icon {
+            width: 32px;
+            height: 32px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #495057;
+        }
+        .download-details {
+            flex: 1;
+            overflow: hidden;
+        }
+        .download-filename {
+            font-weight: 500;
+            color: #2c3e50;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .download-filename:hover {
+            color: #1976d2;
+        }
+        .download-path {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .download-progress-container {
+            width: 150px;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .download-progress-bar {
+            height: 100%;
+            background-color: #28a745; /* Green for progress */
+            border-radius: 4px;
+            transition: width 0.1s linear;
+        }
+        .download-status {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        .download-status.completed { color: #28a745; }
+        .download-status.cancelled { color: #dc3545; }
+        .download-status.interrupted { color: #ffc107; }
+        .download-actions {
+            display: flex;
+            align-items: center;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 14px;
+            padding: 5px;
+        }
+        .action-btn:hover {
+            text-decoration: underline;
+        }
+        .action-btn i {
+            margin-right: 3px;
+        }
+        .settings-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5); /* Slightly darker overlay */
+        }
+        .modal-content {
+            background-color: #ffffff; /* Brighter background */
+            margin: 10% auto; /* Adjust margin for better centering */
+            padding: 25px 30px; /* Increased padding */
+            border: none; /* Remove border */
+            width: 90%;    /* Responsive width */
+            max-width: 480px; /* Max width */
+            border-radius: 10px; /* More rounded corners */
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15); /* Softer shadow */
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            color: #1976d2;
+            text-align: center; /* Center title */
+            margin-bottom: 25px; /* Space below title */
+            font-size: 20px; /* Slightly larger title */
+        }
+        .form-group {
+            margin-bottom: 20px; /* Consistent spacing */
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px; /* Space between label and input */
+            font-weight: 500; /* Bolder label */
+            color: #333;
+        }
+        .path-input-group { /* New class for path input + browse button */
+            display: flex;
+            align-items: center;
+        }
+        .form-group input[type="text"] {
+            padding: 10px; /* More padding in input */
+            border: 1px solid #ddd; /* Lighter border */
+            border-radius: 6px; /* Consistent border-radius */
+            width: 100%; /* Full width by default */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+        .path-input-group input[type="text"] { /* Specific to path input in a group */
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        #browsePathBtn { /* Style for browse button */
+            padding: 10px 15px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex-shrink: 0; /* Prevent browse button from shrinking */
+        }
+        #browsePathBtn:hover {
+            background-color: #5a6268;
+        }
+        .checkbox-group { /* New class for checkbox alignment */
+            display: flex;
+            align-items: center;
+        }
+        .form-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px; /* Space next to checkbox */
+            height: 16px; /* Explicit size */
+            width: 16px;  /* Explicit size */
+            cursor: pointer;
+        }
+        .checkbox-group label { /* Adjust label in checkbox group */
+            margin-bottom: 0;
+            font-weight: normal; /* Normal weight for checkbox label */
+            color: #555;
+        }
+        .modal-actions {
+            text-align: right;
+            margin-top: 30px; /* More space above actions */
+        }
+        .modal-actions button {
+            padding: 10px 18px; /* Consistent padding */
+            margin-left: 10px;
+            border: none;
+            border-radius: 6px; /* Consistent border-radius */
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .save-settings-btn {
+            background-color: #007bff; /* Primary blue */
+            color: white;
+        }
+        .save-settings-btn:hover {
+            background-color: #0056b3;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .cancel-settings-btn {
+            background-color: #f0f0f0; /* Light grey for cancel */
+            color: #333;
+            border: 1px solid #ccc; /* Subtle border */
+        }
+        .cancel-settings-btn:hover {
+            background-color: #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>下载记录</h2>
+        <div>
+            <button class="settings-btn" id="settingsBtn"><i class="fas fa-cog"></i> 设置</button>
+            <button class="clear-downloads-btn" id="clearDownloadsBtn"><i class="fas fa-trash-alt"></i> 清空记录</button>
+        </div>
+    </div>
+    <div class="downloads-list" id="downloadsList">
+        <!-- 下载项将在这里动态添加 -->
+    </div>
+
+    <div id="settingsModal" class="settings-modal">
+        <div class="modal-content">
+            <h3>下载设置</h3>
+            <div class="form-group">
+                <label for="defaultPathInput">默认下载路径:</label>
+                <div class="path-input-group">
+                    <input type="text" id="defaultPathInput" placeholder="例如: C:\Users\YourName\Downloads">
+                    <button id="browsePathBtn">浏览</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="askEveryTimeCheckbox">
+                    <label for="askEveryTimeCheckbox">每次下载前询问保存位置</label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="cancel-settings-btn" id="cancelSettingsBtn">取消</button>
+                <button class="save-settings-btn" id="saveSettingsBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const downloadsList = document.getElementById('downloadsList');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const clearDownloadsBtn = document.getElementById('clearDownloadsBtn');
+            const settingsModal = document.getElementById('settingsModal');
+            const defaultPathInput = document.getElementById('defaultPathInput');
+            const browsePathBtn = document.getElementById('browsePathBtn');
+            const askEveryTimeCheckbox = document.getElementById('askEveryTimeCheckbox');
+            const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+            const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+
+            let currentDownloads = [];
+
+            async function loadDownloadSettings() {
+                const settings = await window.electronAPI.getDownloadSettings();
+                defaultPathInput.value = settings.defaultDownloadPath || '';
+                askEveryTimeCheckbox.checked = settings.askBeforeEachDownload;
+            }
+
+            async function renderDownloads() {
+                downloadsList.innerHTML = ''; // 清空现有列表
+                currentDownloads = await window.electronAPI.getDownloads();
+                currentDownloads.sort((a, b) => b.startTime - a.startTime); // 按开始时间降序
+
+                if (currentDownloads.length === 0) {
+                    downloadsList.innerHTML = '<p style="text-align:center; color:#6c757d;">暂无下载记录</p>';
+                    return;
+                }
+
+                for (const item of currentDownloads) {
+                    const div = document.createElement('div');
+                    div.className = 'download-item';
+                    div.dataset.itemId = item.id;
+
+                    const fileExists = item.filePath ? await window.electronAPI.checkFileExists(item.filePath) : false;
+                    if (item.state === 'completed' && !fileExists && item.filePath) {
+                        div.classList.add('file-missing');
+                    }
+
+                    let iconClass = 'fa-file-alt'; // Default icon
+                    if (item.filename) {
+                        if (/\.(jpg|jpeg|png|gif)$/i.test(item.filename)) iconClass = 'fa-file-image';
+                        else if (/\.(mp3|wav|ogg)$/i.test(item.filename)) iconClass = 'fa-file-audio';
+                        else if (/\.(mp4|mov|avi|mkv)$/i.test(item.filename)) iconClass = 'fa-file-video';
+                        else if (/\.(pdf)$/i.test(item.filename)) iconClass = 'fa-file-pdf';
+                        else if (/\.(doc|docx)$/i.test(item.filename)) iconClass = 'fa-file-word';
+                        else if (/\.(xls|xlsx)$/i.test(item.filename)) iconClass = 'fa-file-excel';
+                        else if (/\.(zip|rar|tar|gz)$/i.test(item.filename)) iconClass = 'fa-file-archive';
+                    }
+
+                    const receivedBytes = item.receivedBytes || 0;
+                    const totalBytes = item.totalBytes || 0;
+                    const progressPercent = totalBytes > 0 ? (receivedBytes / totalBytes) * 100 : 0;
+
+                    div.innerHTML = `
+                        <div class="download-icon"><i class="fas ${iconClass}"></i></div>
+                        <div class="download-details">
+                            <div class="download-filename" title="${item.filename || '未知文件'}">${item.filename || '获取文件名中...'}</div>
+                            ${item.filePath ? `<div class="download-path" title="${item.filePath}">${item.filePath}</div>` : ''}
+                            ${(item.state === 'progressing' && totalBytes > 0) ? `
+                                <div class="download-progress-container">
+                                    <div class="download-progress-bar" style="width: ${progressPercent}%;"></div>
+                                </div>
+                                <div class="download-status">
+                                    ${(receivedBytes / (1024*1024)).toFixed(2)}MB / ${(totalBytes / (1024*1024)).toFixed(2)}MB
+                                </div>
+                            ` : `<div class="download-status ${item.state || ''}">${formatStatus(item.state, fileExists, item.filePath)}</div>`}
+                        </div>
+                        <div class="download-actions">
+                            ${(item.state === 'completed' && fileExists && item.filePath) ? `
+                                <button class="action-btn open-file-btn" title="打开文件"><i class="fas fa-folder-open"></i></button>
+                                <button class="action-btn show-in-folder-btn" title="在文件夹中显示"><i class="fas fa-eye"></i></button>
+                            ` : ''}
+                             ${(item.state === 'progressing') ? `
+                                <button class="action-btn cancel-download-btn" title="取消下载"><i class="fas fa-times-circle"></i></button>
+                            ` : ''}
+                             ${(item.state === 'interrupted' || item.state === 'cancelled') ? `
+                                <button class="action-btn retry-download-btn" title="重试下载"><i class="fas fa-redo"></i></button>
+                            ` : ''}
+                            <button class="action-btn remove-item-btn" title="从列表中移除"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    downloadsList.appendChild(div);
+
+                    const filenameEl = div.querySelector('.download-filename');
+                    if (filenameEl && item.state === 'completed' && fileExists && item.filePath) {
+                        filenameEl.addEventListener('click', () => {
+                            window.electronAPI.openDownloadedFile(item.filePath);
+                        });
+                    }
+                    
+                    const openFileBtn = div.querySelector('.open-file-btn');
+                    if (openFileBtn) {
+                        openFileBtn.addEventListener('click', () => window.electronAPI.openDownloadedFile(item.filePath));
+                    }
+
+                    const showInFolderBtn = div.querySelector('.show-in-folder-btn');
+                    if (showInFolderBtn) {
+                        showInFolderBtn.addEventListener('click', () => window.electronAPI.showItemInFolder(item.filePath));
+                    }
+                    
+                    const cancelBtn = div.querySelector('.cancel-download-btn');
+                    if (cancelBtn) {
+                        cancelBtn.addEventListener('click', () => window.electronAPI.cancelDownload(item.id));
+                    }
+
+                    const retryBtn = div.querySelector('.retry-download-btn');
+                    if (retryBtn) {
+                        retryBtn.addEventListener('click', () => window.electronAPI.retryDownload(item.id));
+                    }
+                    
+                    const removeItemBtn = div.querySelector('.remove-item-btn');
+                    if (removeItemBtn) {
+                        removeItemBtn.addEventListener('click', async () => {
+                            await window.electronAPI.removeDownload(item.id);
+                            renderDownloads(); // Re-render
+                        });
+                    }
+                }
+            }
+            
+            function formatStatus(state, fileExists, filePath) {
+                if (state === 'completed') {
+                    return fileExists || !filePath ? '已完成' : '已完成 (文件不存在)';
+                }
+                if (state === 'progressing') return '下载中...';
+                if (state === 'cancelled') return '已取消';
+                if (state === 'interrupted') return '已中断';
+                if (state === 'failed') return '下载失败';
+                return state || '等待中...';
+            }
+
+            settingsBtn.addEventListener('click', () => {
+                loadDownloadSettings();
+                settingsModal.style.display = 'block';
+            });
+
+            clearDownloadsBtn.addEventListener('click', async () => {
+                if (confirm('确定要清空所有下载记录吗？此操作不可恢复。')) {
+                    await window.electronAPI.clearDownloads();
+                    renderDownloads();
+                }
+            });
+
+            cancelSettingsBtn.addEventListener('click', () => {
+                settingsModal.style.display = 'none';
+            });
+            
+            browsePathBtn.addEventListener('click', async () => {
+                const path = await window.electronAPI.openPathDialog();
+                if (path) {
+                    defaultPathInput.value = path;
+                }
+            });
+
+            saveSettingsBtn.addEventListener('click', async () => {
+                await window.electronAPI.setDownloadSettings({
+                    defaultDownloadPath: defaultPathInput.value,
+                    askBeforeEachDownload: askEveryTimeCheckbox.checked
+                });
+                settingsModal.style.display = 'none';
+                // Optionally, provide feedback to the user
+            });
+            
+            window.electronAPI.onDownloadUpdate((item) => {
+                const existingItemIndex = currentDownloads.findIndex(d => d.id === item.id);
+                if (existingItemIndex > -1) {
+                    currentDownloads[existingItemIndex] = {...currentDownloads[existingItemIndex], ...item}; // 合并更新
+                } else {
+                    // 如果因为某些原因 'started' 信号错过了，这里也可以添加
+                    currentDownloads.unshift(item); // 添加到开头，与 main.js 行为一致
+                }
+                renderDownloads();
+            });
+            
+            window.electronAPI.onDownloadCompleted((item) => {
+                 const existingItemIndex = currentDownloads.findIndex(d => d.id === item.id);
+                if (existingItemIndex > -1) {
+                    currentDownloads[existingItemIndex] = {...currentDownloads[existingItemIndex], ...item}; // 合并更新
+                } else {
+                    // 理论上，条目应该已经通过 started 或 update 添加了
+                    currentDownloads.unshift(item);
+                }
+                renderDownloads();
+            });
+
+
+            // Initial load
+            renderDownloads();
+            loadDownloadSettings(); // Load settings on init as well
+        });
+    </script>
+</body>
+</html> 

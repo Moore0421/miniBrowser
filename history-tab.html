@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>浏览历史</title>
+    <style>
+        body {
+            background: #f5f6fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #2c3e50;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        h2 {
+            margin: 0;
+            color: #1976d2;
+        }
+
+        .clear-btn {
+            padding: 8px 16px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .clear-btn:hover {
+            background: #d32f2f;
+        }
+
+        .history-list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .history-date {
+            font-weight: 500;
+            margin: 20px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .history-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            object-fit: contain;
+        }
+
+        .history-details {
+            flex: 1;
+        }
+
+        .history-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .history-url {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .history-time {
+            color: #999;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 8px;
+            padding: 10px 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            padding: 5px;
+        }
+
+        .search-box i {
+            color: #666;
+            margin-right: 10px;
+        }
+
+        .delete-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover .delete-btn {
+            display: flex;
+        }
+
+        .delete-btn:hover {
+            background: #ffebee;
+            color: #e53935;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <h2>浏览历史</h2>
+        <button class="clear-btn" id="clearHistoryBtn">清除所有历史</button>
+    </div>
+    
+    <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="搜索历史记录...">
+    </div>
+    
+    <div class="history-list" id="historyList"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const historyList = document.getElementById('historyList');
+            const searchInput = document.getElementById('searchInput');
+            const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+            
+            // 加载历史记录
+            async function loadHistory() {
+                try {
+                    const history = await window.electronAPI.getHistory();
+                    
+                    if (history.length === 0) {
+                        historyList.innerHTML = '<div class="empty-history">暂无浏览历史</div>';
+                        return;
+                    }
+                    
+                    // 按日期分组
+                    const groupedHistory = groupByDate(history);
+                    
+                    // 渲染历史记录
+                    renderHistory(groupedHistory);
+                } catch (error) {
+                    historyList.innerHTML = `<div class="empty-history">加载历史记录失败<br/><span>${error}</span></div>`;
+                }
+            }
+            
+            // 按日期分组历史记录
+            function groupByDate(history) {
+                const groups = {};
+                
+                history.forEach(item => {
+                    const date = new Date(item.timestamp);
+                    const dateStr = formatDate(date);
+                    
+                    if (!groups[dateStr]) {
+                        groups[dateStr] = [];
+                    }
+                    
+                    groups[dateStr].push(item);
+                });
+                
+                return groups;
+            }
+            
+            // 格式化日期
+            function formatDate(date) {
+                const today = new Date();
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                
+                if (date.toDateString() === today.toDateString()) {
+                    return '今天';
+                } else if (date.toDateString() === yesterday.toDateString()) {
+                    return '昨天';
+                } else {
+                    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+                }
+            }
+            
+            // 格式化时间
+            function formatTime(date) {
+                return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            // 渲染历史记录
+            function renderHistory(groupedHistory) {
+                historyList.innerHTML = '';
+                
+                // 按日期排序（最近的日期在前）
+                const sortedDates = Object.keys(groupedHistory).sort((a, b) => {
+                    if (a === '今天') return -1;
+                    if (b === '今天') return 1;
+                    if (a === '昨天') return -1;
+                    if (b === '昨天') return 1;
+                    return 0;
+                });
+                
+                sortedDates.forEach(date => {
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'history-date';
+                    dateHeader.textContent = date;
+                    historyList.appendChild(dateHeader);
+                    
+                    // 按时间排序（最近的时间在前）
+                    const items = groupedHistory[date].sort((a, b) => b.timestamp - a.timestamp);
+                    
+                    items.forEach(item => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+                        historyItem.innerHTML = `
+                            <img src="${item.favicon || 'https://www.google.com/favicon.ico'}" class="history-icon" onerror="this.src='https://www.google.com/favicon.ico'">
+                            <div class="history-details">
+                                <div class="history-title">${item.title}</div>
+                                <div class="history-url">${item.url}</div>
+                            </div>
+                            <div class="history-time">${formatTime(new Date(item.timestamp))}</div>
+                            <div class="delete-btn" data-timestamp="${item.timestamp}">
+                                <i class="fas fa-times"></i>
+                            </div>
+                        `;
+                        
+                        // 点击历史记录项打开链接
+                        historyItem.addEventListener('click', (e) => {
+                            // 如果点击的是删除按钮，不打开链接
+                            if (e.target.closest('.delete-btn')) {
+                                return;
+                            }
+                            window.electronAPI.openUrlInNewTab(item.url);
+                        });
+                        
+                        // 删除按钮点击事件
+                        const deleteBtn = historyItem.querySelector('.delete-btn');
+                        deleteBtn.addEventListener('click', async (e) => {
+                            e.stopPropagation(); // 阻止冒泡，避免触发父元素的点击事件
+                            const timestamp = parseInt(deleteBtn.getAttribute('data-timestamp'));
+                            await window.electronAPI.deleteHistoryItem(timestamp);
+                            loadHistory(); // 重新加载历史记录
+                        });
+                        
+                        historyList.appendChild(historyItem);
+                    });
+                });
+            }
+            
+            // 搜索历史记录
+            searchInput.addEventListener('input', async () => {
+                const query = searchInput.value.trim().toLowerCase();
+                const history = await window.electronAPI.getHistory();
+                
+                if (query === '') {
+                    const groupedHistory = groupByDate(history);
+                    renderHistory(groupedHistory);
+                    return;
+                }
+                
+                const filteredHistory = history.filter(item => 
+                    item.title.toLowerCase().includes(query) || 
+                    item.url.toLowerCase().includes(query)
+                );
+                
+                const groupedHistory = groupByDate(filteredHistory);
+                renderHistory(groupedHistory);
+            });
+            
+            // 清除所有历史
+            clearHistoryBtn.addEventListener('click', async () => {
+                if (confirm('确定要清除所有浏览历史吗？')) {
+                    await window.electronAPI.clearHistory();
+                    loadHistory();
+                }
+            });
+            
+            // 初始加载
+            loadHistory();
+        });
+    </script>
+</body>
+</html> 
