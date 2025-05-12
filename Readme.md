@@ -60,7 +60,10 @@ npm run build
 
 ## 开发提示
 
-- 书签数据保存在用户目录下的 `bookmarks.json`
+- 书签数据、历史记录。下载记录均保存在用户目录下
+   - Windows: Windows: C:\Users\<YourUsername>\AppData\Roaming\<AppName>\
+   - macOS: /Users/<YourUsername>/Library/Application Support/<AppName>/
+   - Linux: /home/<YourUsername>/.config/<AppName>/
 - 支持 Windows、macOS、Linux 多平台打包
 - 可通过 F12 调试渲染进程
 
