@@ -19,8 +19,8 @@
 1. 克隆本仓库到本地：
 
    ```bash
-   git clone <your-repo-url>
-   cd electron
+   git clone https://github.com/Moore0421/miniBrowser.git
+   cd miniBrowser
    ```
 
 2. 安装依赖：
@@ -61,16 +61,12 @@ npm run build
 ## 开发提示
 
 - 书签数据、历史记录。下载记录均保存在用户目录下
-   - Windows: `C:\Users\<YourUsername>\AppData\Roaming\<AppName>\`
-   - macOS: `/Users/<YourUsername>/Library/Application Support/<AppName>/`
-   - Linux: `/home/<YourUsername>/.config/<AppName>/`
+   - Windows: `C:\Users\<YourUsername>\AppData\Roaming\mini-browser\`
+   - macOS: `/Users/<YourUsername>/Library/Application Support/mini-browser/`
+   - Linux: `/home/<YourUsername>/.config/mini-browser/`
 - 支持 Windows、macOS、Linux 多平台打包
 - 可通过 F12 调试渲染进程
 
 ## 贡献
 
 项目仍处于非常初期的阶段，欢迎提交 Pull Request 或 Issue为项目提供意见和建议。
-
-## 许可证
-
-MIT License
